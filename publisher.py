@@ -33,7 +33,7 @@ def parser():
         files_list = new_conn.nlst()
         for files in files_list:
             new_path = new_dir + '/' + files
-            channel.basic_publish(exchange='', routing_key='ftp_paths', body={'path': new_path})
+            channel.basic_publish(exchange='', routing_key='ftp_paths', body=new_path)
             if files == files_list[-1]:
                 new_conn.close()
                 break
