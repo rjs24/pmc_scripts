@@ -10,21 +10,16 @@ def callback(ch, method, properties, body):
     print(mong_data)
     record = collection.find({"_id": ObjectId(mong_data) })
     pmc = [r for r in record]
-    print(pmc)
+    local_pmcs_list = [p.split('/')[-1] for p in paths_list]
     if pmc != []:
-        for pths in paths_list:
-            print(pths + " : " + pmc[0]['pmc'])
-            if pmc[0]['pmc'] == pths.split('/')[-1].replace(".xml",".zip").replace(".txt",".zip") and pths.split('.')[-1] == 'xml':
-                collection.update({ "_id": ObjectId(mong_data) }, {"xml_path": pths})
-            elif pmc[0]['pmc'] == pths.split('/')[-1].replace(".xml",".zip").replace(".txt",".zip") and pths.split('.')[-1] == 'txt':
-                collection.update({ "_id": ObjectId(mong_data) }, {"txt_path": pths})
-            else:
-                print("no path match")
-                ch.basic_publish(exchange='', routing_key='db_no_match', body=mong_data)
-                continue
+        if pmc[0]['pmc'].replace(".zip",".txt") in local_pmcs_list:
+            index = local_pmcs_list.index(pmc[0]['pmc'].replace(".zip",".txt"))
+            collection.update({ "_id": ObjectId(mong_data) }, {"xml_path": paths_list[index]})
+        elif pmc[0]['pmc'].replace(".zip",".xml") in local_pmcs_list:
+            index = local_pmcs_list.index(pmc[0]['pmc'].replace(".zip",".xml"))
+            collection.update({ "_id": ObjectId(mong_data) }, {"txt_path": paths_list[index]})
     else:
-        print("no db match")
-        ch.basic_publish(exchange='', routing_key='db_no_match', body=mong_data)
+        print("no path match")
 
 
 
@@ -43,7 +38,6 @@ if __name__ == "__main__":
     mongo_client_str = "mongodb://%s:%s@127.0.0.1:27017/admin" % (os.environ.get('MONGODB_USERNAME'), os.environ.get('MONGODB_PASSWORD'))
     mongo_client = MongoClient(mongo_client_str)
     db = mongo_client['local']
-    ch.queue_declare(queue='db_no_match')
     collection = db['pmcs']
     ch.basic_consume(
         queue='db_done', on_message_callback=callback, auto_ack=True)
