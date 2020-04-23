@@ -31,7 +31,7 @@ def parser():
 
     while len(done_list) != max_index:
         if counter %5 == 0:
-            random_sleep = random.randint(1800, 5400)
+            random_sleep = random.randint(300, 900)
             time.sleep(random_sleep)
             continue
         else:
