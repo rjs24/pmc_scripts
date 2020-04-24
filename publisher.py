@@ -53,17 +53,15 @@ def parser():
                     channel.basic_publish(exchange='', routing_key='ftp_paths', body=new_path)
                     if files == files_list[-1]:
                         new_conn.close()
-                        break
-                    else:
-                        continue
+                        del new_conn
+                        if counter % 5 == 0:
+                            random_sleep = random.randint(300, 900)
+                            time.sleep(random_sleep)
+                            break
+                        else:
+                            break
         except Exception as e:
             print(e)
-        if counter % 5 == 0:
-            random_sleep = random.randint(300, 900)
-            time.sleep(random_sleep)
-            continue
-        else:
-            continue
 
 
 if __name__ == '__main__':
