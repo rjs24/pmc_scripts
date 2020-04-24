@@ -34,15 +34,18 @@ def parser():
         current_list = [x for x in dirs if x not in done_list]
         print(len(done_list), len(current_list))
         current_target = random.choice(current_list)
+        print(current_target)
+        done_list.append(current_target)
+        time.sleep(3)
         try:
             new_conn = connector()
-            new_conn_location = "/pub/databases/pmc/suppl/NON-OA/%s" % current_target
+            new_conn_location = "/pub/databases/pmc/suppl/NON-OA/%s" % current_target.replace("\n", "")
             new_conn.cwd(new_conn_location)
             print("new ftp connection now", new_conn)
             current_path = new_conn.pwd()
             files_list = new_conn.nlst()
-            if files_list:
-                done_list.append('empty_list')
+            if files_list == []:
+                print("current target: %s has no files inside" % current_target)
                 continue
             else:
                 for files in files_list:
