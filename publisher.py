@@ -30,36 +30,38 @@ def parser():
     counter = 0
 
     while len(done_list) != max_index:
-        if counter %5 == 0:
+        counter += 1
+        current_list = [x for x in dirs if x not in done_list]
+        print(len(done_list), len(current_list))
+        current_target = random.choice(current_list)
+        try:
+            new_conn = connector()
+            new_conn_location = "/pub/databases/pmc/suppl/NON-OA/%s" % current_target
+            new_conn.cwd(new_conn_location)
+            print("new ftp connection now", new_conn)
+            current_path = new_conn.pwd()
+            files_list = new_conn.nlst()
+            if files_list:
+                done_list.append('empty_list')
+                continue
+            else:
+                for files in files_list:
+                    new_path = current_path + '/' + files
+                    channel.basic_publish(exchange='', routing_key='ftp_paths', body=new_path)
+                    if files == files_list[-1]:
+                        new_conn.close()
+                        break
+                    else:
+                        continue
+        except Exception as e:
+            print(e)
+        if counter % 5 == 0:
             random_sleep = random.randint(300, 900)
             time.sleep(random_sleep)
             continue
         else:
-            counter += 1
-            current_list = [x for x in dirs if x not in done_list]
-            print(len(done_list), len(current_list))
-            current_target = random.choice(current_list)
-            try:
-                new_conn = connector()
-                new_conn_location = "/pub/databases/pmc/suppl/NON-OA/%s" % current_target
-                new_conn.cwd(new_conn_location)
-                print("new ftp connection now", new_conn)
-                current_path = new_conn.pwd()
-                files_list = new_conn.nlst()
-                if files_list == []:
-                    done_list.append('empty_list')
-                    continue
-                else:
-                    for files in files_list:
-                        new_path = current_path + '/' + files
-                        channel.basic_publish(exchange='', routing_key='ftp_paths', body=new_path)
-                        if files == files_list[-1]:
-                            new_conn.close()
-                            break
-                        else:
-                            continue
-            except Exception as e:
-                print(e)
+            continue
+
 
 if __name__ == '__main__':
     parser()
