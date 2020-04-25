@@ -1,21 +1,15 @@
-import ftplib
 import time
 import pika
 import os
 import random
 import time
+import requests
+from bs4 import BeautifulSoup
 
 rabbit_conn = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('RABBITMQ_HOST')))
 channel = rabbit_conn.channel()
 channel.queue_declare(queue='ftp_paths')
 
-
-def connector():
-    ftp_connection = ftplib.FTP("ftp.ebi.ac.uk")
-    ftp_connection.login()
-
-    #ftp_connection.set_pasv(True)
-    return ftp_connection
 
 def file_opener():
     with open("dirslist.txt", "r") as file:
@@ -28,7 +22,6 @@ def parser():
     max_index = len(dirs)
     done_list = []
     counter = 0
-
     while len(done_list) != max_index:
         counter += 1
         current_list = [x for x in dirs if x not in done_list]
@@ -36,30 +29,38 @@ def parser():
         current_target = random.choice(current_list)
         print(current_target)
         done_list.append(current_target)
-        time.sleep(3)
         try:
-            new_conn = connector()
-            new_conn_location = "/pub/databases/pmc/suppl/NON-OA/%s" % current_target.replace("\n", "")
-            new_conn.cwd(new_conn_location)
-            print("new ftp connection now", new_conn)
-            current_path = new_conn.pwd()
-            files_list = new_conn.nlst()
-            if files_list == []:
-                print("current target: %s has no files inside" % current_target)
-                continue
-            else:
-                for files in files_list:
-                    new_path = current_path + '/' + files
-                    channel.basic_publish(exchange='', routing_key='ftp_paths', body=new_path)
-                    if files == files_list[-1]:
-                        new_conn.close()
-                        del new_conn
-                        if counter % 5 == 0:
-                            random_sleep = random.randint(300, 900)
-                            time.sleep(random_sleep)
-                            break
+            new_conn_location = "http://ftp.ebi.ac.uk/pub/databases/pmc/suppl/NON-OA/%s" % current_target.replace("\n", "")
+            req = requests.get(new_conn_location)
+            print("request status:  ", req.status_code)
+            if req.status_code == 200:
+                soup = BeautifulSoup(req.text)
+                print("soup length:  ", len(soup.findAll('a')))
+                if len(soup.findAll('a')) <= 1:
+                    print("current target: %s has no files inside" % current_target)
+                    continue
+                else:
+                    for files in soup.findAll('a'):
+                        print("files: ", files['href'])
+                        if "PMC" in files['href']:
+                            new_path = "/pub/databases/pmc/suppl/NON-OA/%s" % current_target.replace("\n","") + files['href']
+                            channel.basic_publish(exchange='', routing_key='ftp_paths', body=new_path)
+                            """
+                            if files == list(soup.findAll('a'))[-1]:
+                                if counter % 5 == 0:
+                                    random_sleep = random.randint(300, 900)
+                                    time.sleep(random_sleep)
+                                    break
+                                else:
+                                    break
+                            else:
+                                continue
+                            """
                         else:
-                            break
+                            continue
+            else:
+                print(req.status_code)
+                time.sleep(3600)
         except Exception as e:
             print(e)
 
