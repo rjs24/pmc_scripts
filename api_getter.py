@@ -4,9 +4,14 @@ import os
 from lxml import etree
 import datetime
 import time
+import pika
 
 meta_api = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pmc&id=3539452&retmode=json&tool=my_tool&email=my_email@example.com"
 full_article_api = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=4304705&tool=my_tool&email=my_email@example.com"
+
+rabbit_conn = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('RABBITMQ_HOST')))
+channel = rabbit_conn.channel()
+channel.queue_declare(queue='api_done')
 
 def xml_parser(xml_string, collection):
     nw_record = {}
@@ -128,7 +133,6 @@ def db_connector():
 def get_api():
     collection = db_connector()
 
-
     while True:
         pmc = collection.find_one({'title': {'$exists': False }})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
@@ -140,6 +144,8 @@ def get_api():
         if req.status_code == 200:
             xml = req.text
             xml_parser(xml, collection)
+            message = str(pmc['_id'])
+            channel.basic_publish(exchange='', routing_key='api_done', body=message)
         else:
             print("api failed")
 
