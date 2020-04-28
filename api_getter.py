@@ -139,7 +139,7 @@ def get_api():
         full_article_api_string = \
         "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=%s&tool=my_tool&email=my_email@example.com" \
         % pmc_string
-        req = requests.get(full_article_api_string)
+        req = requests.get(full_article_api_string, params={'tool': "text_miner", "email": "rjseacome@gmail.com"})
         time.sleep(3)
         if req.status_code == 200:
             xml = req.text
