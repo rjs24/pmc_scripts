@@ -13,8 +13,10 @@ rabbit_conn = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('
 channel = rabbit_conn.channel()
 channel.queue_declare(queue='api_done')
 
+
 def xml_parser(xml_string, collection):
     nw_record = {}
+    nw_record['references'] = []
     tree = etree.fromstring(xml_string)
     for branch in tree.iter():
         if branch.tag == "journal-title":
@@ -65,17 +67,16 @@ def xml_parser(xml_string, collection):
                                     nw_record['authors'].append(author_object)
                                     continue
                 elif b.tag == "aff":
-                    for insts in b:
-                        for authors in nw_record['authors']:
-                            if authors['id'] == b.items()[-1][-1]:
-                                for inst in b:
-                                    if inst.tag == "addr-line":
-                                        authors['institution'] = inst.text
-                                        continue
-                                    else:
-                                        continue
-                            else:
-                                continue
+                    for authors in nw_record['authors']:
+                        if authors['id'] == b.items()[0][1]:
+                            authors['institution'] = [x for x in b.itertext()][-1]
+                        else:
+                            for inst in b:
+                                if b.tag == "addr-line":
+                                    authors['institution'] = inst.text
+                                    continue
+                                else:
+                                    continue
                 elif b.tag == "volume":
                     nw_record['volume'] = b.text
                     continue
@@ -117,10 +118,62 @@ def xml_parser(xml_string, collection):
             with open(file_string, "w") as file:
                 file.writelines(body)
             nw_record['body_filepath'] = os.path.realpath(file_string)
+        elif branch.tag == "ref-list":
+            for refs in branch:
+                if refs.tag == "ref":
+                    citation_object = {}
+                    citation_object['authors'] = []
+                    for ref in refs:
+                        if ref.tag == "citation":
+                            for r in ref:
+                                if r.tag == "person-group":
+                                    for p in r:
+                                        if p.tag == "name":
+                                            author_object = {}
+                                            for nms in p:
+                                                if nms.tag == "surname":
+                                                    author_object['surname'] = nms.text
+                                                    continue
+                                                elif nms.tag == "given-names":
+                                                    author_object['first_name'] = nms.text
+                                                    continue
+                                                else:
+                                                    continue
+                                            citation_object['authors'].append(author_object)
+                                            continue
+                                elif r.tag == "article-title":
+                                    citation_object['citation_title'] = r.text
+                                    continue
+                                elif r.tag == "source":
+                                    citation_object['citation_publication'] = r.text
+                                    continue
+                                elif r.tag == "year":
+                                    citation_object['citation_year'] = r.text
+                                    continue
+                                elif r.tag == "volume":
+                                    citation_object['citation_volume'] = r.text
+                                    continue
+                                elif r.tag == "fpage":
+                                    citation_object['citation_frontpage'] = r.text
+                                    continue
+                                elif r.tag == "lpage":
+                                    citation_object['citation_lastpage'] = r.text
+                                    continue
+                                elif r.tag == "pub-id" and r.items()[0][-1] == "pmid":
+                                    citation_object['citation_pmid'] = r.text
+                                    continue
+                                else:
+                                    continue
+                        else:
+                            continue
+                    nw_record['references'].append(citation_object)
+                else:
+                    continue
         else:
             continue
     pmc_query_string = "PMC" + nw_record['pmc'] + ".zip"
     collection.update_one({"pmc": pmc_query_string}, {"$set" : nw_record })
+
 
 def db_connector():
     mongo_client_str = "mongodb://%s:%s@%s:27017/admin" % (
@@ -130,6 +183,7 @@ def db_connector():
     collection = db['pmcs']
     return collection
 
+
 def get_api():
     collection = db_connector()
 
@@ -137,17 +191,18 @@ def get_api():
         pmc = collection.find_one({'title': {'$exists': False }})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
         full_article_api_string = \
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=%s&tool=my_tool&email=my_email@example.com" \
+        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=%s&tool=text_miner&email=rjseacome@gmail.com" \
         % pmc_string
-        req = requests.get(full_article_api_string, params={'tool': "text_miner", "email": "rjseacome@gmail.com"})
-        time.sleep(3)
+        req = requests.get(full_article_api_string)
+        time.sleep(2)
         if req.status_code == 200:
             xml = req.text
             xml_parser(xml, collection)
-            message = str(pmc['_id'])
+            message = pmc['pmc']
             channel.basic_publish(exchange='', routing_key='api_done', body=message)
         else:
             print("api failed")
+
 
 if __name__ == "__main__":
     get_api()

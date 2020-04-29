@@ -24,7 +24,8 @@ def db_connector():
 
 def spell_check(channel, method, properties, body):
 
-    pmc_record = collection.find_one({'_id': ObjectId(body)})
+    pmc_num = body.decode('utf-8').replace("PMC","").replace(".zip","")
+    pmc_record = collection.find_one({'pmc': pmc_num})
     body_path = pmc_record['body_filepath']
     with open(body_path, "r") as file:
         contents = file.readlines()
@@ -38,7 +39,10 @@ def spell_check(channel, method, properties, body):
         if check == True or words.isdigit() or len(words) <= 2:
             continue
         elif check == False:
-            spellchecked_list.append(words)
+            if not any(s.isalpha() for s in words):
+                continue
+            else:
+                spellchecked_list.append(words.strip('/').strip("'"))
 
     spellchecked_frequency = FreqDist(spellchecked_list)
     locations_list = []
@@ -51,13 +55,14 @@ def spell_check(channel, method, properties, body):
     locations_file_str = body_path.replace(".txt","") +"_locations.txt"
     with open(locations_file_str, "w") as locations_file:
         locations_file.writelines(json.dumps(locations_list))
-    collection.update_one({'_id': ObjectId(body)},{'$set':{'word_frequency': spellchecked_frequency, 'locations_path': locations_file_str }})
-    message = str(ObjectId(body))
-    channel.basic_publish(exchange='', routing_key='api_done', body=message)
+    collection.update_one({'pmc': pmc_num},{'$set':{'word_frequency': spellchecked_frequency, 'locations_path': locations_file_str }})
+    channel.basic_publish(exchange='', routing_key='spelling_done', body=pmc_num)
+
 
 if __name__ == "__main__":
 
     collection = db_connector()
+    channel.queue_declare(queue='spelling_done')
     channel.basic_consume(
         queue='api_done', on_message_callback=spell_check, auto_ack=True)
     channel.start_consuming()
