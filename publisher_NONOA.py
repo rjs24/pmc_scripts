@@ -12,7 +12,7 @@ channel.queue_declare(queue='ftp_paths')
 
 
 def file_opener():
-    with open("dirslist.txt", "r") as file:
+    with open("dirslist_NONOA.txt", "r") as file:
         dirs_list = file.readlines()
         return dirs_list
 
@@ -32,6 +32,7 @@ def parser():
         try:
             new_conn_location = "http://ftp.ebi.ac.uk/pub/databases/pmc/suppl/NON-OA/%s" % current_target.replace("\n", "")
             req = requests.get(new_conn_location)
+            time.sleep(2)
             print("request status:  ", req.status_code)
             if req.status_code == 200:
                 soup = BeautifulSoup(req.text)
@@ -59,8 +60,7 @@ def parser():
                         else:
                             continue
             else:
-                print(req.status_code)
-                time.sleep(3600)
+                continue
         except Exception as e:
             print(e)
 

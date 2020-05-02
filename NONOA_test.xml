@@ -1,0 +1,233 @@
+<?xml version="1.0" ?>
+<!DOCTYPE pmc-articleset PUBLIC "-//NLM//DTD ARTICLE SET 2.0//EN" "https://dtd.nlm.nih.gov/ncbi/pmc/articleset/nlm-articleset-2.0.dtd">
+<pmc-articleset><article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article">
+  <!--The publisher of this article does not allow downloading of the full text in XML form.-->
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="nlm-ta">J Clin Invest</journal-id>
+      <journal-id journal-id-type="publisher-id">J CLIN INVEST</journal-id>
+      <journal-title>Journal of Clinical Investigation</journal-title>
+      <issn pub-type="ppub">0021-9738</issn>
+      <publisher>
+        <publisher-name>American Society for Clinical Investigation</publisher-name>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">15841211</article-id>
+      <article-id pub-id-type="pmc">1077173</article-id>
+      <article-id pub-id-type="publisher-id">23424</article-id>
+      <article-id pub-id-type="doi">10.1172/JCI200523424</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Article</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+        <article-title>Adipocyte-derived collagen VI affects early mammary tumor progression in vivo, demonstrating a critical interaction in the tumor/stroma microenvironment</article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Iyengar</surname>
+            <given-names>Puneeth</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Espina</surname>
+            <given-names>Virginia</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Williams</surname>
+            <given-names>Terence W.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Lin</surname>
+            <given-names>Ying</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">1</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Berry</surname>
+            <given-names>David</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">4</xref>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">5</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Jelicks</surname>
+            <given-names>Linda A.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">6</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Lee</surname>
+            <given-names>Hyangkyu</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Temple</surname>
+            <given-names>Karla</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">7</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Graves</surname>
+            <given-names>Reed</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">8</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Pollard</surname>
+            <given-names>Jeffrey</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">9</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Chopra</surname>
+            <given-names>Neeru</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">10</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Russell</surname>
+            <given-names>Robert G.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">11</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Sasisekharan</surname>
+            <given-names>Ram</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">12</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Trock</surname>
+            <given-names>Bruce J.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">13</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Lippman</surname>
+            <given-names>Marc</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">14</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Calvert</surname>
+            <given-names>Valerie S.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">15</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Petricoin</surname>
+            <given-names>Emanuel F.</given-names>
+            <suffix>III</suffix>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">15</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Liotta</surname>
+            <given-names>Lance</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">2</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Dadachova</surname>
+            <given-names>Ekaterina</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">16</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Pestell</surname>
+            <given-names>Richard G.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">11</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Lisanti</surname>
+            <given-names>Michael P.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">3</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Bonaldo</surname>
+            <given-names>Paolo</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">17</xref>
+        </contrib>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Scherer</surname>
+            <given-names>Philipp E.</given-names>
+          </name>
+          <xref ref-type="aff" rid="N0x9827060.0x9e38798">1</xref>
+        </contrib>
+      </contrib-group>
+      <aff id="N0x9827060.0x9e38798"><label>1</label>Departments of Cell Biology and Medicine, Albert Einstein Cancer Center, Albert Einstein College of Medicine, New York, New York, USA. <label>2</label>Laboratory of Pathology, National Cancer Institute, Bethesda, Maryland, USA. <label>3</label>Department of Molecular Pharmacology, Albert Einstein Cancer Center, Albert Einstein College of Medicine, New York, New York, USA. <label>4</label>Harvard Medical School, Boston, Massachusetts, USA. <label>5</label>Harvard&#x2013;Massachusetts Institute of Technology Division of Health Sciences and Technology, Cambridge, Massachusetts, USA. <label>6</label>Department of Physiology and Biophysics, Albert Einstein Cancer Center, Albert Einstein College of Medicine, New York, New York, USA. <label>7</label>Committee on Human Nutrition and Nutritional Biology, University of Chicago, Chicago, Illinois, USA. <label>8</label>Department of Biochemistry, State University of New York at Buffalo, School of Medicine and Biomedical Sciences, Buffalo, New York, USA. <label>9</label>Department of Developmental and Molecular Biology and <label>10</label>Department of Pathology, Albert Einstein Cancer Center, Albert Einstein College of Medicine, New York, New York, USA. <label>11</label>Lombardi Comprehensive Cancer Center, Georgetown University Medical School, Georgetown, Washington, DC, USA. <label>12</label>Center for Biological Engineering, Massachusetts Institute of Technology, Cambridge, Massachusetts, USA. <label>13</label>Department of Urology, Johns Hopkins University, Baltimore, Maryland, USA. <label>14</label>Department of Internal Medicine, University of Michigan, Ann Arbor, Michigan, USA. <label>15</label>FDA&#x2013;National Cancer Institute Clinical Proteomics Program, Office of Cellular and Gene Therapy, Center for Biologics Evaluation and Research, FDA, Bethesda, Maryland, USA. <label>16</label>Department of Nuclear Medicine, Albert Einstein Cancer Center, Albert Einstein College of Medicine, New York, New York, USA. <label>17</label>Department of Histology, Microbiology and Medical Biotechnologies, University of Padova, Padova, Italy.</aff>
+      <author-notes>
+        <fn>
+          <p>Address correspondence to: Philipp E. Scherer, Departments of Cell Biology and Medicine, Albert Einstein Cancer Center, Albert Einstein College of Medicine, Jack and Pearl Resnick Campus, 1300 Morris Park Avenue, Chanin, Room 515, Bronx, New York 10461, USA. Phone: (718) 430-2928; Fax: (718) 430-8574; E-mail: <email>scherer@aecom.yu.edu</email>.</p>
+        </fn>
+      </author-notes>
+      <pub-date pub-type="ppub">
+        <day>2</day>
+        <month>5</month>
+        <year>2005</year>
+      </pub-date>
+      <pub-date pub-type="epub">
+        <day>14</day>
+        <month>4</month>
+        <year>2005</year>
+      </pub-date>
+      <volume>115</volume>
+      <issue>5</issue>
+      <fpage>1163</fpage>
+      <lpage>1176</lpage>
+      <history>
+        <date date-type="received">
+          <day>21</day>
+          <month>9</month>
+          <year>2004</year>
+        </date>
+        <date date-type="accepted">
+          <day>1</day>
+          <month>3</month>
+          <year>2005</year>
+        </date>
+      </history>
+      <copyright-statement>Copyright &#xA9; 2005, American Society for Clinical Investigation</copyright-statement>
+      <copyright-year>2005</copyright-year>
+      <abstract>
+        <p>The interactions of transformed cells with the surrounding stromal cells are of importance for tumor progression and metastasis. The relevance of adipocyte-derived factors to breast cancer cell survival and growth is well established. However, it remains unknown which specific adipocyte-derived factors are most critical in this process. Collagen VI is abundantly expressed in adipocytes. Collagen<sup>&#x2013;/&#x2013;</sup> mice in the background of the mouse mammary tumor virus/polyoma virus middle T oncogene (MMTV-PyMT) mammary cancer model demonstrate dramatically reduced rates of early hyperplasia and primary tumor growth. Collagen VI promotes its growth-stimulatory and pro-survival effects in part by signaling through the NG2/chondroitin sulfate proteoglycan receptor expressed on the surface of malignant ductal epithelial cells to sequentially activate Akt and &#x3B2;-catenin and stabilize cyclin D1. Levels of the carboxyterminal domain of collagen VI&#x3B1;3, a proteolytic product of the full-length molecule, are dramatically upregulated in murine and human breast cancer lesions. The same fragment exerts potent growth-stimulatory effects on MCF-7 cells in vitro. Therefore, adipocytes play a vital role in defining the ECM environment for normal and tumor-derived ductal epithelial cells and contribute significantly to tumor growth at early stages through secretion and processing of collagen VI.</p>
+      </abstract>
+    </article-meta>
+  </front>
+</article>
+</pmc-articleset>

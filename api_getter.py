@@ -5,6 +5,7 @@ from lxml import etree
 import datetime
 import time
 import pika
+from bson.objectid import ObjectId
 
 meta_api = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pmc&id=3539452&retmode=json&tool=my_tool&email=my_email@example.com"
 full_article_api = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=4304705&tool=my_tool&email=my_email@example.com"
@@ -14,7 +15,7 @@ channel = rabbit_conn.channel()
 channel.queue_declare(queue='api_done')
 
 
-def xml_parser(xml_string, collection):
+def xml_parser(xml_string, collection, pmc_string):
     nw_record = {}
     nw_record['references'] = []
     tree = etree.fromstring(xml_string)
@@ -49,8 +50,11 @@ def xml_parser(xml_string, collection):
                     for contribs in b:
                         if contribs.tag == "contrib" and contribs.items()[-1][1] == "author":
                             for auths in contribs:
-                                if auths.tag == "name":
-                                    n += 1
+                                if auths.tag == "collab":
+                                    author_object = {}
+                                    author_object['collaborative_authors'] = auths.text
+                                    continue
+                                elif auths.tag == "name":
                                     author_object = {}
                                     for field in auths:
                                         if field.tag == "surname":
@@ -59,24 +63,36 @@ def xml_parser(xml_string, collection):
                                         elif field.tag == "given-names":
                                             author_object['first_name'] = field.text
                                             continue
-                                elif auths.tag == "xref" and auths.items()[-1][-1]:
+                                elif auths.tag == "xref" and auths.items()[-1][-1] and author_object:
                                     author_object['id'] = auths.items()[-1][-1]
                                     continue
-                                elif auths.tag == "email":
+                                elif auths.tag == "email" and author_object:
                                     author_object['email_domain'] = auths.text.split('@')[-1]
-                                    nw_record['authors'].append(author_object)
-                                    continue
-                elif b.tag == "aff":
-                    for authors in nw_record['authors']:
-                        if authors['id'] == b.items()[0][1]:
-                            authors['institution'] = [x for x in b.itertext()][-1]
-                        else:
-                            for inst in b:
-                                if b.tag == "addr-line":
-                                    authors['institution'] = inst.text
                                     continue
                                 else:
                                     continue
+                                nw_record['authors'].append(author_object)
+                        else:
+                            continue
+                elif b.tag == "aff":
+                    for authors in nw_record['authors']:
+                        try:
+                            if authors['id'] == b.items()[0][1]:
+                                authors['institution'] = [x for x in b.itertext()][-1]
+                            else:
+                                for inst in b:
+                                    if b.tag == "addr-line":
+                                        authors['institution'] = inst.text
+                                        continue
+                                    else:
+                                        continue
+                        except KeyError as ke:
+                            print(ke)
+                            continue
+                        except IndexError as ie:
+                            print(ie)
+                            continue
+                    continue
                 elif b.tag == "volume":
                     nw_record['volume'] = b.text
                     continue
@@ -88,19 +104,29 @@ def xml_parser(xml_string, collection):
                     continue
                 elif b.tag == "history":
                     for date in b:
-                        if date.tag == "date" and date.items()[-1][-1] == 'accepted':
-                            for accepted in date:
-                                if accepted.tag == "day":
-                                    day = accepted.text
-                                    continue
-                                elif accepted.tag == "month":
-                                    month = accepted.text
-                                    continue
-                                elif accepted.tag == "year":
-                                    year = accepted.text
-                                    continue
-                            nw_record['publication_date'] = datetime.datetime(int(year), int(month), int(day))
-                        else:
+                        try:
+                            if date.tag == "date" and date.items()[-1][-1] == 'accepted':
+                                day = ''
+                                month = ''
+                                year = ''
+                                for accepted in date:
+                                    if accepted.tag == "day":
+                                        day = accepted.text
+                                        continue
+                                    elif accepted.tag == "month":
+                                        month = accepted.text
+                                        continue
+                                    elif accepted.tag == "year":
+                                        year = accepted.text
+                                        continue
+                                if day and month and year:
+                                    nw_record['publication_date'] = datetime.datetime(int(year), int(month), int(day))
+                                else:
+                                    print(date.text)
+                            else:
+                                continue
+                        except IndexError as ie:
+                            print(ie)
                             continue
                 elif b.tag == "abstract":
                     nw_record['abstract'] = ''
@@ -114,17 +140,18 @@ def xml_parser(xml_string, collection):
             body = ''
             for b in branch.itertext():
                 body += b
-            file_string = "PMC" + nw_record['pmc'] + "_body.txt"
+            file_string = "/home/richard/ebi_text/PMC" + nw_record['pmc'] + "_body.txt"
             with open(file_string, "w") as file:
                 file.writelines(body)
             nw_record['body_filepath'] = os.path.realpath(file_string)
+            continue
         elif branch.tag == "ref-list":
             for refs in branch:
                 if refs.tag == "ref":
                     citation_object = {}
                     citation_object['authors'] = []
                     for ref in refs:
-                        if ref.tag == "citation":
+                        if ref.tag == "citation" or ref.tag == "element-citation":
                             for r in ref:
                                 if r.tag == "person-group":
                                     for p in r:
@@ -166,12 +193,12 @@ def xml_parser(xml_string, collection):
                                     continue
                         else:
                             continue
-                    nw_record['references'].append(citation_object)
+                        nw_record['references'].append(citation_object)
                 else:
                     continue
         else:
             continue
-    pmc_query_string = "PMC" + nw_record['pmc'] + ".zip"
+    pmc_query_string = "PMC" + pmc_string + ".zip"
     collection.update_one({"pmc": pmc_query_string}, {"$set" : nw_record })
 
 
@@ -186,22 +213,23 @@ def db_connector():
 
 def get_api():
     collection = db_connector()
-
     while True:
-        pmc = collection.find_one({'title': {'$exists': False }})
+        pmc = collection.find_one({'title': {'$exists': False}})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
         full_article_api_string = \
         "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=%s&tool=text_miner&email=rjseacome@gmail.com" \
         % pmc_string
         req = requests.get(full_article_api_string)
-        time.sleep(2)
-        if req.status_code == 200:
+        error_str = "The following PMCID is not available"
+        print(req.status_code, pmc_string)
+        if req.status_code == 200 and error_str not in req.text:
             xml = req.text
-            xml_parser(xml, collection)
+            xml_parser(xml, collection, pmc_string)
             message = pmc['pmc']
             channel.basic_publish(exchange='', routing_key='api_done', body=message)
         else:
             print("api failed")
+            collection.update_one({"pmc": pmc['pmc']}, {"$set" : {'title': "Not available" }})
 
 
 if __name__ == "__main__":

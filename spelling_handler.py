@@ -7,9 +7,11 @@ from nltk.probability import FreqDist
 from nltk.corpus import stopwords
 import json
 from bson.objectid import ObjectId
+import time
 
 rabbit_conn = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('RABBITMQ_HOST')))
 channel = rabbit_conn.channel()
+channel.queue_declare('error_spelling')
 
 
 def db_connector():
@@ -26,9 +28,20 @@ def spell_check(channel, method, properties, body):
 
     pmc_num = body.decode('utf-8').replace("PMC","").replace(".zip","")
     pmc_record = collection.find_one({'pmc': pmc_num})
-    body_path = pmc_record['body_filepath']
-    with open(body_path, "r") as file:
-        contents = file.readlines()
+    if pmc_record:
+        try:
+            body_path = pmc_record['body_filepath']
+            with open(body_path, "r") as file:
+                contents = file.readlines()
+        except KeyError as ke:
+            print(ke)
+            channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
+            return None
+        except IOError as e:
+            channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
+    else:
+        channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
+        return None
     processed_list = word_tokenize(''.join(contents))
     stop_words = set(stopwords.words("english"))
     common_removed_list = [x for x in processed_list if x not in stop_words]
