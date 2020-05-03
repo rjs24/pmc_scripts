@@ -49,13 +49,14 @@ def xml_parser(xml_string, collection, pmc_string):
                     nw_record['authors'] = []
                     for contribs in b:
                         if contribs.tag == "contrib" and contribs.items()[-1][1] == "author":
+                            author_object = {}
                             for auths in contribs:
                                 if auths.tag == "collab":
-                                    author_object = {}
+                                    #author_object = {}
                                     author_object['collaborative_authors'] = auths.text
                                     continue
                                 elif auths.tag == "name":
-                                    author_object = {}
+                                    #author_object = {}
                                     for field in auths:
                                         if field.tag == "surname":
                                             author_object['surname'] = field.text
@@ -63,10 +64,10 @@ def xml_parser(xml_string, collection, pmc_string):
                                         elif field.tag == "given-names":
                                             author_object['first_name'] = field.text
                                             continue
-                                elif auths.tag == "xref" and auths.items()[-1][-1] and author_object:
+                                elif auths.tag == "xref" and auths.items()[-1][-1]:
                                     author_object['id'] = auths.items()[-1][-1]
                                     continue
-                                elif auths.tag == "email" and author_object:
+                                elif auths.tag == "email" and auths.text != None:
                                     author_object['email_domain'] = auths.text.split('@')[-1]
                                     continue
                                 else:
