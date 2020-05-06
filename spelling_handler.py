@@ -35,7 +35,7 @@ def spell_check(channel, method, properties, body):
                 contents = file.readlines()
         except KeyError as ke:
             print(ke)
-            channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
+            collection.update_one({'pmc': pmc_num}, {'$set': {'body_filepath': 'No body sent'}})
             return None
         except IOError as e:
             channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)

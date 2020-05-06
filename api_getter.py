@@ -18,6 +18,7 @@ channel.queue_declare(queue='api_done')
 def xml_parser(xml_string, collection, pmc_string):
     nw_record = {}
     nw_record['references'] = []
+    nw_record['authors'] = []
     tree = etree.fromstring(xml_string)
     for branch in tree.iter():
         if branch.tag == "journal-title":
@@ -26,7 +27,7 @@ def xml_parser(xml_string, collection, pmc_string):
         elif branch.tag == "article-meta":
             for b in branch:
                 if b.tag == "article-id":
-                    if b.items()[0][1] == 'pmc':
+                    if b.items()[0][1] == 'pmcid':
                         nw_record['pmc'] = b.text
                         continue
                     elif b.items()[0][1] == 'pmid':
@@ -45,18 +46,14 @@ def xml_parser(xml_string, collection, pmc_string):
                         else:
                             continue
                 elif b.tag == 'contrib-group':
-                    n = 0
-                    nw_record['authors'] = []
                     for contribs in b:
                         if contribs.tag == "contrib" and contribs.items()[-1][1] == "author":
                             author_object = {}
                             for auths in contribs:
                                 if auths.tag == "collab":
-                                    #author_object = {}
                                     author_object['collaborative_authors'] = auths.text
                                     continue
                                 elif auths.tag == "name":
-                                    #author_object = {}
                                     for field in auths:
                                         if field.tag == "surname":
                                             author_object['surname'] = field.text
@@ -64,9 +61,13 @@ def xml_parser(xml_string, collection, pmc_string):
                                         elif field.tag == "given-names":
                                             author_object['first_name'] = field.text
                                             continue
-                                elif auths.tag == "xref" and auths.items()[-1][-1]:
-                                    author_object['id'] = auths.items()[-1][-1]
-                                    continue
+                                elif auths.tag == "xref":
+                                    try:
+                                        author_object['id'] = auths.items()[-1][-1]
+                                        continue
+                                    except IndexError as ie:
+                                        print(ie)
+                                        continue
                                 elif auths.tag == "email" and auths.text != None:
                                     author_object['email_domain'] = auths.text.split('@')[-1]
                                     continue
@@ -75,7 +76,7 @@ def xml_parser(xml_string, collection, pmc_string):
                                 nw_record['authors'].append(author_object)
                         else:
                             continue
-                elif b.tag == "aff":
+                elif b.tag == "aff" and len(nw_record['authors']) > 0:
                     for authors in nw_record['authors']:
                         try:
                             if authors['id'] == b.items()[0][1]:
@@ -214,23 +215,36 @@ def db_connector():
 
 def get_api():
     collection = db_connector()
+    count = 0
     while True:
-        pmc = collection.find_one({'title': {'$exists': False}})
+        pmc = collection.find_one({'$and':[{'body_filepath': {'$exists': False}}, {'title':{'$exists':False}}]})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
         full_article_api_string = \
-        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=%s&tool=text_miner&email=rjseacome@gmail.com" \
+        "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC%s/fullTextXML" \
         % pmc_string
-        req = requests.get(full_article_api_string)
-        error_str = "The following PMCID is not available"
-        print(req.status_code, pmc_string)
-        if req.status_code == 200 and error_str not in req.text:
-            xml = req.text
-            xml_parser(xml, collection, pmc_string)
-            message = pmc['pmc']
-            channel.basic_publish(exchange='', routing_key='api_done', body=message)
-        else:
-            print("api failed")
-            collection.update_one({"pmc": pmc['pmc']}, {"$set" : {'title': "Not available" }})
+        try:
+            req = requests.get(full_article_api_string, timeout=55)
+            error_str = "The following PMCID is not available"
+            print(req.status_code, pmc_string)
+            if req.status_code == 200 and error_str not in req.text:
+                xml = req.text
+                xml_parser(xml, collection, pmc_string)
+                message = pmc['pmc']
+                channel.basic_publish(exchange='', routing_key='api_done', body=message)
+            else:
+                print("api failed")
+                count +=1
+                time.sleep(5)
+                if count % 3 == 0:
+                    failed_pmc_str = "PMC" + pmc_string +".zip"
+                    collection.update_one({"pmc": failed_pmc_str}, {"$set" : {'pmc': pmc_string, 'title': "Not available", 'body_filepath': "Not available", "authors": ["not available"]}})
+                    print("collection should have updated here")
+                    pass
+                else:
+                    continue
+        except requests.exceptions.Timeout as te:
+            print(te)
+            continue
 
 
 if __name__ == "__main__":
