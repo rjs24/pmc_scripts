@@ -13,13 +13,23 @@ full_article_api = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db
 rabbit_conn = pika.BlockingConnection(pika.ConnectionParameters(os.environ.get('RABBITMQ_HOST')))
 channel = rabbit_conn.channel()
 channel.queue_declare(queue='api_done')
-
+channel.queue_declare(queue='api_error')
 
 def xml_parser(xml_string, collection, pmc_string):
     nw_record = {}
     nw_record['references'] = []
     nw_record['authors'] = []
-    tree = etree.fromstring(xml_string)
+    try:
+        tree = etree.fromstring(xml_string)
+    except etree.XMLSyntaxError as xe:
+        print(xe)
+        file_string = "/home/richard/ebi_text/PMC" + pmc_string + "failed.xml"
+        with open(file_string, "w") as file:
+            file.writelines(xml_string)
+        pmc_query_string = "PMC" + pmc_string + ".zip"
+        collection.update_one({"pmc": pmc_query_string}, {"$set" : {"pmc":pmc_string, "title":"xml parse failed", "body_filepath": file_string }})
+        channel.basic_publish(exchange='', routing_key='api_error', body=pmc_string)
+        return None
     for branch in tree.iter():
         if branch.tag == "journal-title":
             nw_record['publication_title'] = branch.text
@@ -216,6 +226,7 @@ def db_connector():
 def get_api():
     collection = db_connector()
     count = 0
+    error_count = 0
     while True:
         pmc = collection.find_one({'$and':[{'body_filepath': {'$exists': False}}, {'title':{'$exists':False}}]})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
@@ -223,22 +234,31 @@ def get_api():
         "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC%s/fullTextXML" \
         % pmc_string
         try:
-            req = requests.get(full_article_api_string, timeout=55)
+            header = {'contact': 'rjseacome@gmail.com'}
+            req = requests.get(full_article_api_string, headers=header, timeout=55)#
+            count += 1
             error_str = "The following PMCID is not available"
             print(req.status_code, pmc_string)
-            if req.status_code == 200 and error_str not in req.text:
+            if req.status_code == 200 and error_str not in req.text and count % 30 != 0:
                 xml = req.text
                 xml_parser(xml, collection, pmc_string)
                 message = pmc['pmc']
                 channel.basic_publish(exchange='', routing_key='api_done', body=message)
+            elif req.status_code == 200 and error_str not in req.text and count % 30 == 0:
+                xml = req.text
+                xml_parser(xml, collection, pmc_string)
+                message = pmc['pmc']
+                channel.basic_publish(exchange='', routing_key='api_done', body=message)
+                time.sleep(5)
             else:
                 print("api failed")
-                count +=1
+                error_count +=1
                 time.sleep(5)
-                if count % 3 == 0:
+                if error_count % 3 == 0:
                     failed_pmc_str = "PMC" + pmc_string +".zip"
                     collection.update_one({"pmc": failed_pmc_str}, {"$set" : {'pmc': pmc_string, 'title': "Not available", 'body_filepath': "Not available", "authors": ["not available"]}})
-                    print("collection should have updated here")
+                    message = pmc_string
+                    channel.basic_publish(exchange='', routing_key='api_error', body=message)
                     pass
                 else:
                     continue

@@ -33,44 +33,43 @@ def spell_check(channel, method, properties, body):
             body_path = pmc_record['body_filepath']
             with open(body_path, "r") as file:
                 contents = file.readlines()
+            processed_list = word_tokenize(''.join(contents))
+            stop_words = set(stopwords.words("english"))
+            common_removed_list = [x for x in processed_list if x not in stop_words]
+            speller = aspell.Speller('lang', 'en')
+            spellchecked_list = []
+            for words in common_removed_list:
+                check = speller.check(words)
+                if check == True or words.isdigit() or len(words) <= 2:
+                    continue
+                elif check == False:
+                    if not any(s.isalpha() for s in words):
+                        continue
+                    else:
+                        spellchecked_list.append(words.strip('/').strip("'"))
+
+            spellchecked_frequency = FreqDist(spellchecked_list)
+            locations_list = []
+            for n, terms in enumerate(processed_list):
+                if terms in spellchecked_list:
+                    locations_list.append((terms, n))
+                    continue
+                else:
+                    continue
+            locations_file_str = body_path.replace(".txt","") +"_locations.txt"
+            with open(locations_file_str, "w") as locations_file:
+                locations_file.writelines(json.dumps(locations_list))
+            collection.update_one({'pmc': pmc_num},{'$set':{'word_frequency': spellchecked_frequency, 'locations_path': locations_file_str }})
+            channel.basic_publish(exchange='', routing_key='spelling_done', body=pmc_num)
         except KeyError as ke:
             print(ke)
             collection.update_one({'pmc': pmc_num}, {'$set': {'body_filepath': 'No body sent'}})
-            return None
+            channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
         except IOError as e:
             channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
     else:
         channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
         return None
-    processed_list = word_tokenize(''.join(contents))
-    stop_words = set(stopwords.words("english"))
-    common_removed_list = [x for x in processed_list if x not in stop_words]
-    speller = aspell.Speller('lang', 'en')
-    spellchecked_list = []
-    for words in common_removed_list:
-        check = speller.check(words)
-        if check == True or words.isdigit() or len(words) <= 2:
-            continue
-        elif check == False:
-            if not any(s.isalpha() for s in words):
-                continue
-            else:
-                spellchecked_list.append(words.strip('/').strip("'"))
-
-    spellchecked_frequency = FreqDist(spellchecked_list)
-    locations_list = []
-    for n, terms in enumerate(processed_list):
-        if terms in spellchecked_list:
-            locations_list.append((terms, n))
-            continue
-        else:
-            continue
-    locations_file_str = body_path.replace(".txt","") +"_locations.txt"
-    with open(locations_file_str, "w") as locations_file:
-        locations_file.writelines(json.dumps(locations_list))
-    collection.update_one({'pmc': pmc_num},{'$set':{'word_frequency': spellchecked_frequency, 'locations_path': locations_file_str }})
-    channel.basic_publish(exchange='', routing_key='spelling_done', body=pmc_num)
-
 
 if __name__ == "__main__":
 
