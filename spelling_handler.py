@@ -31,6 +31,9 @@ def spell_check(channel, method, properties, body):
     if pmc_record:
         try:
             body_path = pmc_record['body_filepath']
+            if body_path == "No body sent":
+                return None
+
             with open(body_path, "r") as file:
                 contents = file.readlines()
             processed_list = word_tokenize(''.join(contents))
@@ -65,8 +68,10 @@ def spell_check(channel, method, properties, body):
             print(ke)
             collection.update_one({'pmc': pmc_num}, {'$set': {'body_filepath': 'No body sent'}})
             channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
+            return None
         except IOError as e:
             channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
+            return None
     else:
         channel.basic_publish(exchange='', routing_key='error_spelling', body=pmc_num)
         return None

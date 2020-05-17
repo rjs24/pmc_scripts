@@ -228,14 +228,15 @@ def get_api():
     count = 0
     error_count = 0
     while True:
-        pmc = collection.find_one({'$and':[{'body_filepath': {'$exists': False}}, {'title':{'$exists':False}}]})
+        pmc = collection.find_one({'$and':[{'body_filepath': {'$exists': False}}, {'title':{'$exists':False}},{'volume':{'$exists':False}}]})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
         full_article_api_string = \
         "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC%s/fullTextXML" \
         % pmc_string
         try:
             header = {'contact': 'rjseacome@gmail.com'}
-            req = requests.get(full_article_api_string, headers=header, timeout=55)#
+            req = requests.get(full_article_api_string, timeout=55)
+            time.sleep(1)
             count += 1
             error_str = "The following PMCID is not available"
             print(req.status_code, pmc_string)
@@ -253,7 +254,7 @@ def get_api():
             else:
                 print("api failed")
                 error_count +=1
-                time.sleep(5)
+                time.sleep(2)
                 if error_count % 3 == 0:
                     failed_pmc_str = "PMC" + pmc_string +".zip"
                     collection.update_one({"pmc": failed_pmc_str}, {"$set" : {'pmc': pmc_string, 'title': "Not available", 'body_filepath': "Not available", "authors": ["not available"]}})
