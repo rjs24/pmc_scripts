@@ -236,7 +236,7 @@ def get_api():
         try:
             header = {'contact': 'rjseacome@gmail.com'}
             req = requests.get(full_article_api_string, timeout=55)
-            time.sleep(1)
+            #time.sleep(1)
             count += 1
             error_str = "The following PMCID is not available"
             print(req.status_code, pmc_string)
