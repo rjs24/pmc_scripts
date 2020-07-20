@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: aspell-python-py3
+Version: 1.15
+Summary: Wrapper around GNU Aspell for Python 3
+Home-page: http://github.com/WojciechMula/aspell-python
+Author: Wojciech Muła
+Author-email: wojciech_mula@poczta.onet.pl
+License: BSD (3 clauses)
+Description: aspell-python - C extension for Python 3
+Platform: Linux
+Platform: Windows
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Programming Language :: C
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Text Editors :: Text Processing
