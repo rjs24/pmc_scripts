@@ -37,20 +37,19 @@ def xml_parser(xml_string, collection, pmc_string):
         elif branch.tag == "article-meta":
             for b in branch:
                 if b.tag == "article-id":
-                    try:
-                        if b.items()[0][1] == 'pmcid':
-                            nw_record['pmc'] = b.text
-                            continue
-                        elif b.items()[0][1] == 'pmid':
-                            nw_record['pmid'] = b.text
-                            continue
-                        elif b.items()[0][1] == 'doi':
-                            nw_record['doi'] = b.text
-                            continue
-                        else:
-                            continue
-                    except IndexError as ie:
-                        print(ie)
+                    if b.items()[0][1] == 'pmcid':
+                        nw_record['pmc'] = b.text
+                        continue
+                    elif b.items()[0][1] == 'pmc':
+                        nw_record['pmc'] = b.text
+                        continue
+                    elif b.items()[0][1] == 'pmid':
+                        nw_record['pmid'] = b.text
+                        continue
+                    elif b.items()[0][1] == 'doi':
+                        nw_record['doi'] = b.text
+                        continue
+                    else:
                         continue
                 elif b.tag == "title-group":
                     for title in b:
@@ -238,12 +237,11 @@ def get_api():
         pmc = collection.find_one({'$and':[{'body_filepath': {'$exists': False}}, {'title':{'$exists':False}},{'volume':{'$exists':False}}]})
         pmc_string = pmc['pmc'].replace('PMC',"").replace(".zip","")
         full_article_api_string = \
-        "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC%s/fullTextXML" \
+        "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=%s&tool=textmine&email=rjseacome@gmail.com" \
         % pmc_string
         try:
             header = {'contact': 'rjseacome@gmail.com'}
             req = requests.get(full_article_api_string, timeout=55)
-            time.sleep(1)
             count += 1
             error_str = "The following PMCID is not available"
             print(req.status_code, pmc_string)
@@ -252,13 +250,12 @@ def get_api():
                 xml_parser(xml, collection, pmc_string)
                 message = pmc['pmc']
                 channel.basic_publish(exchange='', routing_key='api_done', body=message)
-                time.sleep(1)
-            elif req.status_code == 200 and error_str not in req.text and count % 5000 == 0:
+            elif req.status_code == 200 and error_str not in req.text and count % 30 == 0:
                 xml = req.text
                 xml_parser(xml, collection, pmc_string)
                 message = pmc['pmc']
                 channel.basic_publish(exchange='', routing_key='api_done', body=message)
-                time.sleep(1800)
+                time.sleep(2)
             else:
                 print("api failed")
                 error_count +=1
